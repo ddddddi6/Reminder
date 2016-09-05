@@ -36,7 +36,6 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate {
     
     var masterDelegate: MasterDelegate?
     var category: Category!
-    var delegate: CategoryDelegate?
     var managedObjectContext: NSManagedObjectContext
     
     required init?(coder aDecoder: NSCoder) {
@@ -59,14 +58,29 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate {
             self.title = "Edit Category"
             showCategoryDetail()
         }
-        prioritySegment.selectedSegmentIndex = 0
-        radiusSegment.selectedSegmentIndex = 0
+        
+        if remindSwitch.on {
+            radiusSegment.enabled = true
+        } else {
+            radiusSegment.enabled = false
+            radius = 0
+        }
         // Do any additional setup after loading the view.
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+    }
+    
+    override func viewDidAppear(animated: Bool) {
+//        super.viewDidAppear(animated)
+//        self.delegate?.reloadCategory()
+//        self.masterDelegate?.refreshView()
     }
     
     func showCategoryDetail() {
@@ -83,7 +97,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate {
         } else {
             remindSwitch.setOn(false, animated: true)
         }
-        switch Int(category.priority!) {
+        switch priority {
         case 0:
             prioritySegment.selectedSegmentIndex = 0
             break
@@ -99,7 +113,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate {
         default:
             break
         }
-        switch Int(category.radius!) {
+        switch radius {
         case 50:
             radiusSegment.selectedSegmentIndex = 0
             break
@@ -160,6 +174,15 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate {
         }
     }
     
+    @IBAction func sendReminder(sender: UISwitch) {
+        if remindSwitch.on {
+            radiusSegment.enabled = true
+        } else {
+            radiusSegment.enabled = false
+            radius = 0
+        }
+    }
+    
     @IBAction func cancelAction(sender: UIBarButtonItem) {
         self.dismissViewControllerAnimated(true, completion: nil)
     }
@@ -216,11 +239,11 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate {
                     abort()
                 }
             }
-            delegate?.reloadCategory()
-            masterDelegate?.refreshView()
+            self.masterDelegate?.refreshTableView()
+            self.masterDelegate?.refreshMapView()
             self.dismissViewControllerAnimated(true, completion: nil)
+            
         }
-        
     }
     
     func searchBarSearchButtonClicked(searchBar: UISearchBar) {
@@ -346,7 +369,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate {
         view.endEditing(true)
         super.touchesBegan(touches, withEvent: event)
     }
-
+    
     /*
     // MARK: - Navigation
 

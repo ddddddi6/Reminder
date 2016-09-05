@@ -9,11 +9,7 @@
 import UIKit
 import CoreData
 
-protocol CategoryDelegate{
-    func reloadCategory()
-}
-
-class CategoryTableViewController: UITableViewController, CategoryDelegate {
+class CategoryTableViewController: UITableViewController {
     
     var managedObjectContext: NSManagedObjectContext
     //var currentReminder: NSMutableArray
@@ -29,8 +25,7 @@ class CategoryTableViewController: UITableViewController, CategoryDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        reloadCategory()
+        //masterDelegate?.refreshView()
         // Uncomment the following line to preserve selection between presentations
         // self.clearsSelectionOnViewWillAppear = false
 
@@ -44,37 +39,10 @@ class CategoryTableViewController: UITableViewController, CategoryDelegate {
     }
     
     override func viewWillAppear(animated: Bool) {
-        self.clearsSelectionOnViewWillAppear = self.splitViewController!.collapsed
-        reloadCategory()
+        super.viewWillAppear(animated)
+        //masterDelegate?.refreshView()
     }
     
-    func getCategories() -> NSMutableArray {
-        let fetchRequest = NSFetchRequest()
-        let entityDescription = NSEntityDescription.entityForName("Category", inManagedObjectContext:
-            self.managedObjectContext)
-        fetchRequest.entity = entityDescription
-        
-        var result = NSArray?()
-        do
-        {
-            result = try self.managedObjectContext.executeFetchRequest(fetchRequest)
-            if result!.count == 0
-            {
-                currentCategory = []
-            }
-            else
-            {
-                currentCategory = NSMutableArray(array: result!)
-            }
-        }
-        catch
-        {
-            let fetchError = error as NSError
-            print(fetchError)
-        }
-        return currentCategory
-    }
-
     // MARK: - Table view data source
 
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
@@ -103,6 +71,64 @@ class CategoryTableViewController: UITableViewController, CategoryDelegate {
         return cell
     }
     
+    // Override to support conditional editing of the table view.
+    override func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+        if indexPath.section == 0{
+            return true
+        }
+        else{
+            return false
+        }
+    }
+    
+    override func tableView(tableView: UITableView, editActionsForRowAtIndexPath indexPath: NSIndexPath) -> [UITableViewRowAction]?
+    {
+        let edit = UITableViewRowAction(style: .Normal, title: "Edit") { action, index in
+            self.performSegueWithIdentifier("editCategorySegue", sender: self.currentCategory[index.row])
+        }
+        let delete = UITableViewRowAction(style: .Default, title: "Delete") { action, index in
+            // Delete the row from the data source
+            self.managedObjectContext.deleteObject(self.currentCategory[indexPath.row] as! NSManagedObject)
+            //Save the ManagedObjectContext
+            do
+            {
+                try self.managedObjectContext.save()
+            }
+            catch let error
+            {
+                print("Could not save Deletion \(error)")
+            }
+
+            self.currentCategory = self.getCategories()
+            self.tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
+            
+                    }
+        return [delete, edit]
+    }
+    
+    override func tableView(tableView: UITableView, canMoveRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+        return true
+    }
+    
+    override func tableView(tableView: UITableView, moveRowAtIndexPath fromIndexPath: NSIndexPath, toIndexPath: NSIndexPath) {
+        let itemToMove = currentCategory[fromIndexPath.row]
+        currentCategory.removeObjectAtIndex(fromIndexPath.row)
+        currentCategory.insertObject(itemToMove, atIndex: toIndexPath.row)
+    }
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+       if (segue.identifier == "editCategorySegue")
+        {
+            let controller: CategoryDetailViewController = segue.destinationViewController as! CategoryDetailViewController
+            //let indexPath = tableView.indexPathForSelectedRow!
+            
+            //let c: Category = self.currentCategory[indexPath.row] as! Category
+            controller.category = sender as! Category
+            controller.masterDelegate = self.masterDelegate
+            // Display reminder details screen
+       } 
+    }
+
     func changeColor(color:String, lable: UILabel) {
         switch color {
         case "purple":
@@ -135,58 +161,33 @@ class CategoryTableViewController: UITableViewController, CategoryDelegate {
         }
     }
     
-    // Override to support conditional editing of the table view.
-    override func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
-        if indexPath.section == 0{
-            return true
-        }
-        else{
-            return false
-        }
-    }
-    
-    override func tableView(tableView: UITableView, editActionsForRowAtIndexPath indexPath: NSIndexPath) -> [UITableViewRowAction]?
-    {
-        let edit = UITableViewRowAction(style: .Normal, title: "Edit") { action, index in
-            self.performSegueWithIdentifier("editCategorySegue", sender: self.currentCategory[index.row])
-        }
-        let delete = UITableViewRowAction(style: .Default, title: "Delete") { action, index in
-            // Delete the row from the data source
-            self.managedObjectContext.deleteObject(self.currentCategory[indexPath.row] as! NSManagedObject)
-            self.currentCategory = self.getCategories()
-            self.tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
-            
-            //Save the ManagedObjectContext
-            do
-            {
-                try self.managedObjectContext.save()
-            }
-            catch let error
-            {
-                print("Could not save Deletion \(error)")
-            }
-        }
-        return [delete, edit]
-    }
-    
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-       if (segue.identifier == "editCategorySegue")
+    func getCategories() -> NSMutableArray {
+        let fetchRequest = NSFetchRequest()
+        let entityDescription = NSEntityDescription.entityForName("Category", inManagedObjectContext:
+            self.managedObjectContext)
+        fetchRequest.entity = entityDescription
+        
+        var result = NSArray?()
+        do
         {
-            let controller: CategoryDetailViewController = segue.destinationViewController as! CategoryDetailViewController
-            //let indexPath = tableView.indexPathForSelectedRow!
-            
-            //let c: Category = self.currentCategory[indexPath.row] as! Category
-            controller.category = sender as! Category
-            controller.delegate = self
-            //controller.masterDelegate = self.masterDelegate
-            // Display reminder details screen
+            result = try self.managedObjectContext.executeFetchRequest(fetchRequest)
+            if result!.count == 0
+            {
+                currentCategory = []
+            }
+            else
+            {
+                currentCategory = NSMutableArray(array: result!)
+            }
         }
+        catch
+        {
+            let fetchError = error as NSError
+            print(fetchError)
+        }
+        return currentCategory
     }
-    
-    func reloadCategory() {
-        currentCategory = getCategories()
-        self.tableView.reloadData()
-    }
+
 
     /*
     // Override to support rearranging the table view.
