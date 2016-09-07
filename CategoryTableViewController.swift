@@ -34,8 +34,6 @@ class CategoryTableViewController: UITableViewController {
             self.detailViewController = (controllers[controllers.count - 1] as! UINavigationController).topViewController as? ReminderTableViewController
         }
         
-        
-        //masterDelegate?.refreshView()
         // Uncomment the following line to preserve selection between presentations
         // self.clearsSelectionOnViewWillAppear = false
 
@@ -91,12 +89,6 @@ class CategoryTableViewController: UITableViewController {
         }
     }
     
-    override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath){
-        let selectedMonster = self.currentCategory[indexPath.row]
-        //self.delegate?.monsterSelected(selectedMonster as! Category)
-        //self.performSegueWithIdentifier("showReminderList", sender: self)
-    }
-    
     override func tableView(tableView: UITableView, editActionsForRowAtIndexPath indexPath: NSIndexPath) -> [UITableViewRowAction]?
     {
         let edit = UITableViewRowAction(style: .Normal, title: "Edit") { action, index in
@@ -134,7 +126,7 @@ class CategoryTableViewController: UITableViewController {
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
        if (segue.identifier == "editCategorySegue")
         {
-            let theDestination: CategoryDetailViewController = segue.destinationViewController as! CategoryDetailViewController
+            let theDestination: CategoryDetailViewController = (segue.destinationViewController as! UINavigationController).topViewController as! CategoryDetailViewController
             //let indexPath = tableView.indexPathForSelectedRow!
             
             //let c: Category = self.currentCategory[indexPath.row] as! Category

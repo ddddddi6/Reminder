@@ -30,7 +30,7 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate, CLLocation
     override func viewDidLoad() {
         super.viewDidLoad()
 
-                if currentCategory.count != 0 {
+        if currentCategory.count != 0 {
             showCategoryOnMap()
         }
         // Setup delegation so we can respond to MapView and LocationManager events
@@ -133,11 +133,10 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate, CLLocation
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if segue.identifier == "showCategoryDetial"
         {
-            let theDestination : CategoryDetailViewController = segue.destinationViewController as! CategoryDetailViewController
+            let theDestination = (segue.destinationViewController as! UINavigationController).topViewController as! ReminderTableViewController
             let url = NSURL(string: self.categotyId!)
             let id = (managedObjectContext.persistentStoreCoordinator?.managedObjectIDForURIRepresentation(url!))! as NSManagedObjectID
-            theDestination.category = managedObjectContext.objectWithID(id) as! Category
-            theDestination.masterDelegate = self.masterDelegate
+            theDestination.catogory = managedObjectContext.objectWithID(id) as! Category
         }
     }
     

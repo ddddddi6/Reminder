@@ -225,6 +225,8 @@ class ReminderTableViewController: UITableViewController, ReminderListDelegate {
         })
         tableView.reloadData()
     }
+    
+    
 
     /*
     // Override to support rearranging the table view.

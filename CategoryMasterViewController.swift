@@ -64,12 +64,14 @@ class CategoryMasterViewController: UIViewController, MasterDelegate, CLLocation
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         viewSegment.selectedSegmentIndex = 0
         
         locationManager.delegate = self
         
         setupGeofencing()
         
+
         // Ask user for permission to use location
         // Uses description from NSLocationAlwaysUsageDescription in Info.plist
         locationManager.requestAlwaysAuthorization()
@@ -91,7 +93,7 @@ class CategoryMasterViewController: UIViewController, MasterDelegate, CLLocation
             let categoryMapViewController = segue.destinationViewController  as! CategoryMapViewController
             categoryMapViewController.currentCategory = getCategories()
         } else if (segue.identifier == "addCategorySegue") {
-            let categoryDetailViewController = segue.destinationViewController  as! CategoryDetailViewController
+            let categoryDetailViewController = (segue.destinationViewController as! UINavigationController).topViewController  as! CategoryDetailViewController
             //categoryDetailViewController.currentCategory = currentCategory
             categoryDetailViewController.masterDelegate = self
             // Pass data to secondViewController before the transition
@@ -122,7 +124,15 @@ class CategoryMasterViewController: UIViewController, MasterDelegate, CLLocation
     
     @IBAction func editTable(sender: UIBarButtonItem) {
         let categoryTable = self.childViewControllers[1] as! UITableViewController as! CategoryTableViewController
-        categoryTable.editing = !categoryTable.editing
+        self.navigationItem.leftBarButtonItem = categoryTable.editButtonItem()
+
+        if (categoryTable.editing) {
+            self.editButtonItem().title = "Done"
+            categoryTable.editing = !categoryTable.editing
+            
+        } else {
+            self.editButtonItem().title = "Edit"
+        }
     }
     
     func getCategories() -> NSMutableArray {
@@ -226,8 +236,6 @@ class CategoryMasterViewController: UIViewController, MasterDelegate, CLLocation
         }
     }
 
-    
-    
 
     /*
     // MARK: - Navigation

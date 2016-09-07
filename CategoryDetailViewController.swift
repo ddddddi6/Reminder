@@ -141,7 +141,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
         self.pinAnnotationView = MKPinAnnotationView(annotation: self.pointAnnotation, reuseIdentifier: nil)
         self.mapView.centerCoordinate = self.pointAnnotation.coordinate
         self.mapView.addAnnotation(self.pinAnnotationView.annotation!)
-        let region = MKCoordinateRegion(center: self.mapView.centerCoordinate, span: MKCoordinateSpan(latitudeDelta: 0.03, longitudeDelta: 0.03))
+        let region = MKCoordinateRegion(center: self.mapView.centerCoordinate, span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
         self.mapView.setRegion(region, animated: true)
     }
     
@@ -187,7 +187,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
     }
     
     @IBAction func cancelAction(sender: UIBarButtonItem) {
-        self.dismissViewControllerAnimated(true, completion: nil)
+        self.performSegueWithIdentifier("backToReminderList", sender: self)
     }
     
     @IBAction func doneAction(sender: UIBarButtonItem) {
@@ -244,8 +244,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
             }
             self.masterDelegate?.refreshTableView()
             self.masterDelegate?.refreshMapView()
-            self.dismissViewControllerAnimated(true, completion: nil)
-            
+            self.performSegueWithIdentifier("backToReminderList", sender: self)
         }
     }
     
@@ -297,7 +296,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
             self.pinAnnotationView = MKPinAnnotationView(annotation: self.pointAnnotation, reuseIdentifier: nil)
             self.mapView.centerCoordinate = self.pointAnnotation.coordinate
             self.mapView.addAnnotation(self.pinAnnotationView.annotation!)
-            let region = MKCoordinateRegion(center: self.mapView.centerCoordinate, span: MKCoordinateSpan(latitudeDelta: 0.03, longitudeDelta: 0.03))
+            let region = MKCoordinateRegion(center: self.mapView.centerCoordinate, span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
             self.mapView.setRegion(region, animated: true)
         }
     }
