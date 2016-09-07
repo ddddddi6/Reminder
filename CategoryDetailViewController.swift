@@ -10,7 +10,7 @@ import UIKit
 import MapKit
 import CoreData
 
-class CategoryDetailViewController: UIViewController, UISearchBarDelegate {
+class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMapViewDelegate, CLLocationManagerDelegate {
 
     @IBOutlet var titleField: UITextField!
     @IBOutlet var remindSwitch: UISwitch!
@@ -26,6 +26,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate {
     var latitude: Double!
     var longitude: Double!
     
+    let locationManager = CLLocationManager()
     var annotation:MKAnnotation!
     var localSearchRequest:MKLocalSearchRequest!
     var localSearch:MKLocalSearch!
@@ -65,6 +66,14 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate {
             radiusSegment.enabled = false
             radius = 0
         }
+        
+        // Setup delegation so we can respond to MapView and LocationManager events
+        mapView.delegate = self
+        locationManager.delegate = self
+        
+        // Ask user for permission to use location
+        // Uses description from NSLocationAlwaysUsageDescription in Info.plist
+        locationManager.requestAlwaysAuthorization()
         // Do any additional setup after loading the view.
     }
 
@@ -75,12 +84,6 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate {
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
-    }
-    
-    override func viewDidAppear(animated: Bool) {
-//        super.viewDidAppear(animated)
-//        self.delegate?.reloadCategory()
-//        self.masterDelegate?.refreshView()
     }
     
     func showCategoryDetail() {
@@ -138,7 +141,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate {
         self.pinAnnotationView = MKPinAnnotationView(annotation: self.pointAnnotation, reuseIdentifier: nil)
         self.mapView.centerCoordinate = self.pointAnnotation.coordinate
         self.mapView.addAnnotation(self.pinAnnotationView.annotation!)
-        let region = MKCoordinateRegion(center: self.mapView.centerCoordinate, span: MKCoordinateSpan(latitudeDelta: 0.3, longitudeDelta: 0.3))
+        let region = MKCoordinateRegion(center: self.mapView.centerCoordinate, span: MKCoordinateSpan(latitudeDelta: 0.03, longitudeDelta: 0.03))
         self.mapView.setRegion(region, animated: true)
     }
     
@@ -294,7 +297,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate {
             self.pinAnnotationView = MKPinAnnotationView(annotation: self.pointAnnotation, reuseIdentifier: nil)
             self.mapView.centerCoordinate = self.pointAnnotation.coordinate
             self.mapView.addAnnotation(self.pinAnnotationView.annotation!)
-            let region = MKCoordinateRegion(center: self.mapView.centerCoordinate, span: MKCoordinateSpan(latitudeDelta: 0.3, longitudeDelta: 0.3))
+            let region = MKCoordinateRegion(center: self.mapView.centerCoordinate, span: MKCoordinateSpan(latitudeDelta: 0.03, longitudeDelta: 0.03))
             self.mapView.setRegion(region, animated: true)
         }
     }

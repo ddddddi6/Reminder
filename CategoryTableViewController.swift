@@ -9,12 +9,14 @@
 import UIKit
 import CoreData
 
+
 class CategoryTableViewController: UITableViewController {
     
     var managedObjectContext: NSManagedObjectContext
     //var currentReminder: NSMutableArray
     var currentCategory: NSMutableArray
     var masterDelegate: MasterDelegate?
+    var detailViewController: ReminderTableViewController? = nil
     
     required init?(coder aDecoder: NSCoder) {
         self.currentCategory = NSMutableArray()
@@ -25,6 +27,14 @@ class CategoryTableViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        //let categoryMasterView = self.navigationController!.parentViewController as! CategoryMasterViewController
+        if let split = masterDelegate?.getTableView()  {
+            let controllers = split.viewControllers
+            self.detailViewController = (controllers[controllers.count - 1] as! UINavigationController).topViewController as? ReminderTableViewController
+        }
+        
+        
         //masterDelegate?.refreshView()
         // Uncomment the following line to preserve selection between presentations
         // self.clearsSelectionOnViewWillAppear = false
@@ -81,6 +91,12 @@ class CategoryTableViewController: UITableViewController {
         }
     }
     
+    override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath){
+        let selectedMonster = self.currentCategory[indexPath.row]
+        //self.delegate?.monsterSelected(selectedMonster as! Category)
+        //self.performSegueWithIdentifier("showReminderList", sender: self)
+    }
+    
     override func tableView(tableView: UITableView, editActionsForRowAtIndexPath indexPath: NSIndexPath) -> [UITableViewRowAction]?
     {
         let edit = UITableViewRowAction(style: .Normal, title: "Edit") { action, index in
@@ -101,8 +117,7 @@ class CategoryTableViewController: UITableViewController {
 
             self.currentCategory = self.getCategories()
             self.tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
-            
-                    }
+        }
         return [delete, edit]
     }
     
@@ -119,14 +134,22 @@ class CategoryTableViewController: UITableViewController {
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
        if (segue.identifier == "editCategorySegue")
         {
-            let controller: CategoryDetailViewController = segue.destinationViewController as! CategoryDetailViewController
+            let theDestination: CategoryDetailViewController = segue.destinationViewController as! CategoryDetailViewController
             //let indexPath = tableView.indexPathForSelectedRow!
             
             //let c: Category = self.currentCategory[indexPath.row] as! Category
-            controller.category = sender as! Category
-            controller.masterDelegate = self.masterDelegate
+            theDestination.category = sender as! Category
+            theDestination.masterDelegate = self.masterDelegate
             // Display reminder details screen
-       } 
+       }
+       else if (segue.identifier == "showReminderList")
+       {
+            if let indexPath = self.tableView.indexPathForSelectedRow {
+
+                let theDestination = (segue.destinationViewController as! UINavigationController).topViewController as! ReminderTableViewController
+                theDestination.catogory = currentCategory[indexPath.row] as! Category
+            }
+        }
     }
 
     func changeColor(color:String, lable: UILabel) {

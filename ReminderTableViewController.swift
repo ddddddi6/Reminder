@@ -7,12 +7,42 @@
 //
 
 import UIKit
+import CoreData
 
-class ReminderTableViewController: UITableViewController {
+protocol ReminderListDelegate {
+    func refreshTable()
+}
 
+class ReminderTableViewController: UITableViewController, ReminderListDelegate {
+
+    @IBOutlet var infoLabel: UILabel!
+    @IBOutlet var addReminderItem: UIBarButtonItem!
+    
+    var catogory: Category!
+    
+    var managedObjectContext: NSManagedObjectContext
+    var currentReminder: NSMutableArray
+    
+    
+    required init?(coder aDecoder: NSCoder) {
+        self.currentReminder = NSMutableArray()
+        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+        self.managedObjectContext = appDelegate.managedObjectContext
+        super.init(coder: aDecoder)
+    }
+
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        if (catogory != nil) {
+            refreshTable()
+            self.currentReminder = NSMutableArray(array: (catogory!.tasks?.allObjects as! [Reminder]))
+            addReminderItem.enabled = true
+        } else {
+            self.infoLabel.text = " Please select a category"
+            addReminderItem.enabled = false
+        }
         // Uncomment the following line to preserve selection between presentations
         // self.clearsSelectionOnViewWillAppear = false
 
@@ -26,46 +56,175 @@ class ReminderTableViewController: UITableViewController {
     }
 
     // MARK: - Table view data source
-
+    
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
         // #warning Incomplete implementation, return the number of sections
-        return 0
+        return 1
     }
-
+    
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
-        return 0
+        switch(section)
+        {
+        case 0: return self.currentReminder.count
+        case 1: return 1
+        default: return 0
+        }
     }
-
-    /*
+    
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier("reuseIdentifier", forIndexPath: indexPath)
-
+        let cellIdentifier = "ReminderTableViewCell"
+        let cell = tableView.dequeueReusableCellWithIdentifier(cellIdentifier, forIndexPath: indexPath) as! ReminderTableViewCell
+        
         // Configure the cell...
-
+        let r: Reminder = self.currentReminder[indexPath.row] as! Reminder
+        cell.reminderTitle.text = r.title
+        let dateFormatter = NSDateFormatter()
+        dateFormatter.dateFormat = "dd-MM-YYYY, HH:mm"
+        if r.deadline != nil {
+            let date = dateFormatter.stringFromDate(r.deadline!)
+            cell.deadline.text = date
+        } else {
+            cell.deadline.text = "Not available"
+        }
+        if r.isComplete == true {
+            cell.reminderTitle.textColor = UIColor.grayColor()
+            cell.deadline.textColor = UIColor.grayColor()
+        }
+        if ((r.deadline?.compare(NSDate())) == NSComparisonResult.OrderedAscending) {
+            cell.reminderTitle.textColor = UIColor.redColor()
+            cell.deadline.textColor = UIColor.redColor()
+        }
         return cell
     }
-    */
-
-    /*
+    
     // Override to support conditional editing of the table view.
     override func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
-        // Return false if you do not want the specified item to be editable.
-        return true
+        if indexPath.section == 0{
+            return true
+        }
+        else{
+            return false
+        }
     }
-    */
-
-    /*
-    // Override to support editing the table view.
-    override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-        if editingStyle == .Delete {
+    
+    override func tableView(tableView: UITableView, editActionsForRowAtIndexPath indexPath: NSIndexPath) -> [UITableViewRowAction]?
+    {
+        let delete = UITableViewRowAction(style: .Default, title: "Delete") { action, index in
             // Delete the row from the data source
-            tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
-        } else if editingStyle == .Insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
+            self.managedObjectContext.deleteObject(self.currentReminder[indexPath.row] as! NSManagedObject)
+            //Save the ManagedObjectContext
+            do
+            {
+                try self.managedObjectContext.save()
+            }
+            catch let error
+            {
+                print("Could not save Deletion \(error)")
+            }
+            
+            self.currentReminder = self.getReminders()
+            self.tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
+        }
+        //self.refreshTable()
+        return [delete]
     }
-    */
+
+    func getReminders() -> NSMutableArray {
+        let result = catogory!.tasks?.allObjects as! [Reminder]
+        if result.count == 0
+        {
+            currentReminder = []
+        }
+        else
+        {
+            self.currentReminder = NSMutableArray(array: result)
+        }
+        
+        return currentReminder
+    }
+    
+    func refreshTable() {
+        self.title = catogory.title
+        currentReminder = getReminders()
+        if (currentReminder.count == 0) {
+            self.infoLabel.text = "  There is no reminder"
+        } else if (currentReminder.count == 1) {
+            self.infoLabel.text = "  Here is " + String(currentReminder.count) + " Reminder"
+        } else {
+            self.infoLabel.text = "  Here Are " + String(currentReminder.count) + " Reminders"
+        }
+        sortReminderList ()
+    }
+
+    @IBAction func addReminder(sender: UIBarButtonItem) {
+        self.performSegueWithIdentifier("addNewReminder", sender: self)
+    }
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        if (segue.identifier == "addNewReminder")
+        {
+            if catogory == nil {
+                let messageString: String = "Please select a categoty first"
+                // Setup an alert to warn user
+                // UIAlertController manages an alert instance
+                let alertController = UIAlertController(title: "Alert", message: messageString, preferredStyle:
+                    UIAlertControllerStyle.Alert)
+                
+                alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default,handler: nil))
+                
+                self.presentViewController(alertController, animated: true, completion: nil)
+            } else {
+                let theDestination: ReminderDetailViewController = segue.destinationViewController as! ReminderDetailViewController
+                
+                theDestination.category = catogory
+                theDestination.delegate = self
+            // Display reminder details screen
+            }
+        } else if (segue.identifier == "editReminder") {
+            if catogory == nil {
+                let messageString: String = "Please select a categoty first"
+                // Setup an alert to warn user
+                // UIAlertController manages an alert instance
+                let alertController = UIAlertController(title: "Alert", message: messageString, preferredStyle:
+                    UIAlertControllerStyle.Alert)
+                
+                alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default,handler: nil))
+                
+                self.presentViewController(alertController, animated: true, completion: nil)
+            } else {
+                let indexPath = tableView.indexPathForSelectedRow!
+                let r: Reminder = self.currentReminder[indexPath.row] as! Reminder
+                let theDestination: ReminderDetailViewController = segue.destinationViewController as! ReminderDetailViewController
+                theDestination.reminder = r 
+                theDestination.category = catogory
+                theDestination.delegate = self
+                // Display reminder details screen
+            }
+
+        }
+    }
+    
+    func sortReminderList () {
+            currentReminder.sortUsingComparator({ (o1: AnyObject!, o2: AnyObject!) -> NSComparisonResult in
+            let reminder1 = o1 as! Reminder
+            let reminder2 = o2 as! Reminder
+            if (reminder1.isComplete!.boolValue && !reminder2.isComplete!.boolValue) {
+                return .OrderedDescending
+            }
+            if (!reminder1.isComplete!.boolValue && reminder2.isComplete!.boolValue) {
+                return .OrderedAscending
+            }
+            if (reminder1.deadline != nil && reminder2.deadline == nil) {
+                return .OrderedAscending
+            }
+            if (reminder1.deadline == nil && reminder2.deadline != nil) {
+                return .OrderedDescending
+            }
+            return reminder1.deadline!.compare(reminder2.deadline!)
+        })
+        tableView.reloadData()
+    }
 
     /*
     // Override to support rearranging the table view.

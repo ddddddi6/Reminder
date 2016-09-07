@@ -10,12 +10,12 @@ import UIKit
 import MapKit
 import CoreData
 
-class CategoryMapViewController: UIViewController, MKMapViewDelegate {
+class CategoryMapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDelegate {
 
     @IBOutlet var mapView: MKMapView!
     
+    let locationManager = CLLocationManager()
     var managedObjectContext: NSManagedObjectContext
-    //var currentReminder: NSMutableArray
     var currentCategory: NSMutableArray
     var masterDelegate: MasterDelegate?
     var categotyId: String?
@@ -30,8 +30,17 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        self.mapView.delegate = self
-        showCategoryOnMap()
+                if currentCategory.count != 0 {
+            showCategoryOnMap()
+        }
+        // Setup delegation so we can respond to MapView and LocationManager events
+        mapView.delegate = self
+        locationManager.delegate = self
+        
+        // Ask user for permission to use location
+        // Uses description from NSLocationAlwaysUsageDescription in Info.plist
+        locationManager.requestAlwaysAuthorization()
+
         // Do any additional setup after loading the view.
     }
 
@@ -42,7 +51,9 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate {
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
-        showCategoryOnMap()
+        if currentCategory.count != 0 {
+            showCategoryOnMap()
+        }
     }
     
     func showCategoryOnMap() {
@@ -68,11 +79,12 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate {
     }
     
     func mapView(mapView: MKMapView, rendererForOverlay overlay: MKOverlay) -> MKOverlayRenderer {
-        let overlay = overlay as? MKCircle
-            let circleRenderer = MKCircleRenderer(circle: overlay!)
+        if let overlay = overlay as? MKCircle {
+            let circleRenderer = MKCircleRenderer(circle: overlay)
             circleRenderer.fillColor = UIColor(red: 254/255.0, green: 76/255.0, blue: 52/255.0, alpha: 0.5)
             return circleRenderer
-        
+        }
+        return MKOverlayRenderer()
     }
     
     // add info button for each annotation on map to jump to rehabilitation detail controller
@@ -83,6 +95,7 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate {
             //return nil
             return nil
         }
+        if annotation is MKPointAnnotation {
         
         let reuseId = "pin"
         var pinView = mapView.dequeueReusableAnnotationViewWithIdentifier(reuseId) as? MKPinAnnotationView
@@ -106,6 +119,8 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate {
         pinView!.detailCalloutAccessoryView = titleView
         
         return pinView
+        }
+        return nil
     }
     
     func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {

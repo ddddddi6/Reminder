@@ -14,6 +14,14 @@ class GlobalSplitViewController: UISplitViewController, UISplitViewControllerDel
         super.viewDidLoad()
         self.delegate = self
         self.preferredDisplayMode = .AllVisible
+        
+//        let leftNavController = self.viewControllers.first as! UINavigationController
+//        let masterViewController = leftNavController.topViewController as! CategoryMasterViewController
+//        let detailViewController = self.viewControllers.last as! ReminderTableViewController
+//        
+//        let categoryTable = masterViewController.childViewControllers[1] as! CategoryTableViewController
+//        categoryTable.delegate = detailViewController
+        
         // Do any additional setup after loading the view.
     }
 

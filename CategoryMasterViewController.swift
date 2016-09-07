@@ -8,17 +8,21 @@
 
 import UIKit
 import CoreData
+import MapKit
 
 protocol MasterDelegate {
     func refreshTableView()
     func refreshMapView()
+    func getTableView() -> UISplitViewController
 }
 
-class CategoryMasterViewController: UIViewController, MasterDelegate {
+class CategoryMasterViewController: UIViewController, MasterDelegate, CLLocationManagerDelegate {
+    
+    let locationManager = CLLocationManager()
     
     var managedObjectContext: NSManagedObjectContext
-    //var currentReminder: NSMutableArray
     var currentCategory: NSMutableArray
+    var detailViewController: ReminderTableViewController? = nil
     
     required init?(coder aDecoder: NSCoder) {
         self.currentCategory = NSMutableArray()
@@ -61,6 +65,14 @@ class CategoryMasterViewController: UIViewController, MasterDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         viewSegment.selectedSegmentIndex = 0
+        
+        locationManager.delegate = self
+        
+        setupGeofencing()
+        
+        // Ask user for permission to use location
+        // Uses description from NSLocationAlwaysUsageDescription in Info.plist
+        locationManager.requestAlwaysAuthorization()
         // Do any additional setup after loading the view.
     }
 
@@ -83,7 +95,7 @@ class CategoryMasterViewController: UIViewController, MasterDelegate {
             //categoryDetailViewController.currentCategory = currentCategory
             categoryDetailViewController.masterDelegate = self
             // Pass data to secondViewController before the transition
-        }
+        } 
     }
     
     func refreshTableView() {
@@ -95,8 +107,17 @@ class CategoryMasterViewController: UIViewController, MasterDelegate {
     func refreshMapView() {
         let categoryMap = self.childViewControllers[0] as! CategoryMapViewController
         categoryMap.currentCategory = getCategories()
-        categoryMap.showCategoryOnMap()
+        if getCategories().count != 0 {
+            categoryMap.showCategoryOnMap()
+        }
 
+    }
+    
+    func getTableView() -> UISplitViewController {
+//        let categoryTable = self.childViewControllers[1] as! UITableViewController as! CategoryTableViewController
+//        return categoryTable
+        let view = self.splitViewController as! GlobalSplitViewController
+        return view
     }
     
     @IBAction func editTable(sender: UIBarButtonItem) {
@@ -129,6 +150,80 @@ class CategoryMasterViewController: UIViewController, MasterDelegate {
             print(fetchError)
         }
         return currentCategory
+    }
+
+    func checkReminderCompletion(c: Category) -> Bool{
+        let reminders = NSMutableArray(array: (c.tasks?.allObjects as! [Reminder]))
+        if reminders.count != 0 {
+            for reminder in reminders {
+                let r: Reminder = reminder as! Reminder
+                if r.isComplete == false {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+    
+    func setupGeofencing() {
+        for category in currentCategory {
+            let c: Category = category as! Category
+            if checkReminderCompletion(c) == true {
+                let region = (name:c.title, coordinate:CLLocationCoordinate2D(latitude: Double(c.latitude!), longitude: Double(c.longitude!)))
+                // Setup geofence monitoring
+                print("Monitoring \(region.name) region")
+                // Using radius from center of location
+                let geofence = CLCircularRegion(center: region.coordinate, radius: Double(c.radius!), identifier: region.name!)
+                locationManager.startMonitoringForRegion(geofence)
+            }
+        }
+    }
+    
+    func locationManager(manager: CLLocationManager, didEnterRegion region: CLRegion) {
+        print("Entered region \(region.identifier)")
+        
+        // Notify the user when they have entered a region
+        let title = "Entered new region"
+        let message = "You have arrived at \(region.identifier)."
+        
+        if UIApplication.sharedApplication().applicationState == .Active {
+            // App is active, show an alert
+            let alertController = UIAlertController(title: title, message: message, preferredStyle: .Alert)
+            let alertAction = UIAlertAction(title: "OK", style: .Default, handler: nil)
+            alertController.addAction(alertAction)
+            self.presentViewController(alertController, animated: true, completion: nil)
+        } else {
+            // App is inactive, show a notification
+            let notification = UILocalNotification()
+            notification.alertTitle = title
+            notification.alertBody = message
+            notification.soundName = UILocalNotificationDefaultSoundName
+            UIApplication.sharedApplication().presentLocalNotificationNow(notification)
+        }
+    }
+    
+    func locationManager(manager: CLLocationManager, didExitRegion region: CLRegion) {
+        print("Exited region \(region.identifier)")
+        
+        // Notify the user when they have entered a region
+        let title = "Exit region"
+        let message = "You have exited from \(region.identifier)."
+        
+        if UIApplication.sharedApplication().applicationState == .Active {
+            // App is active, show an alert
+            let alertController = UIAlertController(title: title, message: message, preferredStyle: .Alert)
+            let alertAction = UIAlertAction(title: "OK", style: .Default, handler: nil)
+            alertController.addAction(alertAction)
+            self.presentViewController(alertController, animated: true, completion: nil)
+        } else {
+            // App is inactive, show a notification
+            let notification = UILocalNotification()
+            notification.alertTitle = title
+            notification.alertBody = message
+            notification.soundName = UILocalNotificationDefaultSoundName
+            notification.fireDate = NSDate()
+            UIApplication.sharedApplication().presentLocalNotificationNow(notification)
+        }
     }
 
     

@@ -26,6 +26,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
         
         splitViewController.delegate = self
         categoryController.managedObjectContext = self.managedObjectContext
+        
+        let supportedNotificationTypes:UIUserNotificationType = [.Alert, .Badge, .Sound]
+        let notificationSettings = UIUserNotificationSettings(forTypes: supportedNotificationTypes, categories: nil)
+        application.registerUserNotificationSettings(notificationSettings)
         return true
     }
 
