@@ -208,6 +208,7 @@ class CategoryMasterViewController: UIViewController, MasterDelegate, CLLocation
             notification.alertTitle = title
             notification.alertBody = message
             notification.soundName = UILocalNotificationDefaultSoundName
+            notification.fireDate = NSDate()
             UIApplication.sharedApplication().presentLocalNotificationNow(notification)
         }
     }

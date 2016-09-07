@@ -187,7 +187,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
     }
     
     @IBAction func cancelAction(sender: UIBarButtonItem) {
-        self.performSegueWithIdentifier("backToReminderList", sender: self)
+        self.dismissViewControllerAnimated(true, completion: nil)
     }
     
     @IBAction func doneAction(sender: UIBarButtonItem) {
@@ -244,7 +244,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
             }
             self.masterDelegate?.refreshTableView()
             self.masterDelegate?.refreshMapView()
-            self.performSegueWithIdentifier("backToReminderList", sender: self)
+            self.dismissViewControllerAnimated(true, completion: nil)
         }
     }
     
