@@ -11,28 +11,18 @@ import CoreData
 
 
 class CategoryTableViewController: UITableViewController {
-    
-    var managedObjectContext: NSManagedObjectContext
-    //var currentReminder: NSMutableArray
+
     var currentCategory: NSMutableArray
     var masterDelegate: MasterDelegate?
     var detailViewController: ReminderTableViewController? = nil
     
     required init?(coder aDecoder: NSCoder) {
         self.currentCategory = NSMutableArray()
-        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-        self.managedObjectContext = appDelegate.managedObjectContext
         super.init(coder: aDecoder)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        //let categoryMasterView = self.navigationController!.parentViewController as! CategoryMasterViewController
-        if let split = masterDelegate?.getTableView()  {
-            let controllers = split.viewControllers
-            self.detailViewController = (controllers[controllers.count - 1] as! UINavigationController).topViewController as? ReminderTableViewController
-        }
         
         // Uncomment the following line to preserve selection between presentations
         // self.clearsSelectionOnViewWillAppear = false
@@ -96,18 +86,18 @@ class CategoryTableViewController: UITableViewController {
         }
         let delete = UITableViewRowAction(style: .Default, title: "Delete") { action, index in
             // Delete the row from the data source
-            self.managedObjectContext.deleteObject(self.currentCategory[indexPath.row] as! NSManagedObject)
+            DataManager.dataManager.managedObjectContext!.deleteObject(self.currentCategory[indexPath.row] as! NSManagedObject)
             //Save the ManagedObjectContext
             do
             {
-                try self.managedObjectContext.save()
+                try DataManager.dataManager.managedObjectContext!.save()
             }
             catch let error
             {
                 print("Could not save Deletion \(error)")
             }
 
-            self.currentCategory = self.getCategories()
+            self.currentCategory = DataManager.dataManager.getCategories()
             self.tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
         }
         return [delete, edit]
@@ -132,10 +122,11 @@ class CategoryTableViewController: UITableViewController {
             //let c: Category = self.currentCategory[indexPath.row] as! Category
             theDestination.category = sender as! Category
             theDestination.masterDelegate = self.masterDelegate
-            // Display reminder details screen
+            // Display category details screen
        }
        else if (segue.identifier == "showReminderList")
        {
+        // display reminder list under this category
             if let indexPath = self.tableView.indexPathForSelectedRow {
 
                 let theDestination = (segue.destinationViewController as! UINavigationController).topViewController as! ReminderTableViewController
@@ -144,6 +135,7 @@ class CategoryTableViewController: UITableViewController {
         }
     }
 
+    // change title color
     func changeColor(color:String, lable: UILabel) {
         switch color {
         case "purple":
@@ -174,33 +166,6 @@ class CategoryTableViewController: UITableViewController {
             lable.textColor = UIColor.blackColor()
             break
         }
-    }
-    
-    func getCategories() -> NSMutableArray {
-        let fetchRequest = NSFetchRequest()
-        let entityDescription = NSEntityDescription.entityForName("Category", inManagedObjectContext:
-            self.managedObjectContext)
-        fetchRequest.entity = entityDescription
-        
-        var result = NSArray?()
-        do
-        {
-            result = try self.managedObjectContext.executeFetchRequest(fetchRequest)
-            if result!.count == 0
-            {
-                currentCategory = []
-            }
-            else
-            {
-                currentCategory = NSMutableArray(array: result!)
-            }
-        }
-        catch
-        {
-            let fetchError = error as NSError
-            print(fetchError)
-        }
-        return currentCategory
     }
 
 

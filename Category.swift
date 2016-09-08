@@ -14,6 +14,7 @@ class Category: NSManagedObject {
 
 // Insert code here to add functionality to your managed object subclass
 
+    // add reminder to category
     func addReminder(reminder: Reminder) {
         self.mutableSetValueForKey("tasks").addObject(reminder)
     }

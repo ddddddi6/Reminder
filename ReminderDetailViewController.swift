@@ -17,25 +17,21 @@ class ReminderDetailViewController: UIViewController {
     @IBOutlet var completionSwitch: UISwitch!
     @IBOutlet var reminderSwitch: UISwitch!
     
-    var managedObjectContext: NSManagedObjectContext
     var reminder: Reminder!
     var delegate: ReminderListDelegate!
     var category: Category!
     
-    required init?(coder aDecoder: NSCoder) {
-        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-        self.managedObjectContext = appDelegate.managedObjectContext
-        super.init(coder: aDecoder)
-    }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        // check the mode of this controller, new or edit
         if reminder == nil {
             self.title = "New Reminder"
             datePicker.enabled = false
             datePicker.hidden = true
+            completionSwitch.enabled = false
         } else {
+            completionSwitch.enabled = true
             self.title = "Edit Reminder"
             showReminderDetail()
         }
@@ -47,6 +43,7 @@ class ReminderDetailViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
+    // when the controller is for editing, then display the reminder detials for user
     func showReminderDetail() {
         self.titleField.text = reminder.title
         if reminder.deadline != nil {
@@ -67,6 +64,7 @@ class ReminderDetailViewController: UIViewController {
         }
     }
     
+    // let user to choose whether enable due date
     @IBAction func setDeadline(sender: UISwitch) {
         if reminderSwitch.on {
             datePicker.enabled = true
@@ -77,6 +75,7 @@ class ReminderDetailViewController: UIViewController {
         }
     }
     
+    // save the input
     @IBAction func doneAction(sender: UIBarButtonItem) {
         let reminderTitle = self.titleField.text
         let deadline : NSDate?
@@ -88,6 +87,7 @@ class ReminderDetailViewController: UIViewController {
         let note = self.noteField.text
         let isComplete = self.completionSwitch.on
         
+        // check input validation
         if(title!.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet()) == "")
         {
             let messageString: String = "Please input valid title"
@@ -103,34 +103,25 @@ class ReminderDetailViewController: UIViewController {
         } else {
             if (reminder == nil) {
                 reminder = (NSEntityDescription.insertNewObjectForEntityForName("Reminder",
-                    inManagedObjectContext: self.managedObjectContext) as? Reminder)!
+                    inManagedObjectContext: DataManager.dataManager.managedObjectContext!) as? Reminder)!
             }
             reminder.title = reminderTitle
             reminder.deadline = deadline
             reminder.isComplete = isComplete
             reminder.note = note
             category.addReminder(reminder)
-            if self.managedObjectContext.hasChanges {
-                do {
-                    try self.managedObjectContext.save()
-                } catch {
-                    // Replace this implementation with code to handle the error appropriately.
-                    // abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                    let nserror = error as NSError
-                    NSLog("Unresolved error \(nserror), \(nserror.userInfo)")
-                    abort()
-                }
-            }
+            DataManager.dataManager.saveData()
             delegate?.refreshTable()
             self.navigationController?.popToRootViewControllerAnimated(true)
         }
     }
 
+    // cancel the input and back to previous controller
     @IBAction func cancelAction(sender: UIBarButtonItem) {
         self.navigationController?.popToRootViewControllerAnimated(true)
     }
     
-    // dismiss keyboard for search bar
+    // dismiss keyboard for text field
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?){
         view.endEditing(true)
         super.touchesBegan(touches, withEvent: event)

@@ -21,11 +21,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDele
         splitViewController.delegate = self
         //let categoryController = splitViewController.viewControllers[splitViewController.viewControllers.count - 1] as! CategoryListViewController
         
-        let navigationController = splitViewController.viewControllers[splitViewController.viewControllers.count - 2] as! UINavigationController
-        let categoryController = navigationController.topViewController as! CategoryMasterViewController
+        //let navigationController = splitViewController.viewControllers[splitViewController.viewControllers.count - 2] as! UINavigationController
+        //let categoryController = navigationController.topViewController as! CategoryMasterViewController
         
         splitViewController.delegate = self
-        categoryController.managedObjectContext = self.managedObjectContext
+        DataManager.dataManager.managedObjectContext = self.managedObjectContext
         
         let supportedNotificationTypes:UIUserNotificationType = [.Alert, .Badge, .Sound]
         let notificationSettings = UIUserNotificationSettings(forTypes: supportedNotificationTypes, categories: nil)

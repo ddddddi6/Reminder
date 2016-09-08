@@ -15,15 +15,12 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate, CLLocation
     @IBOutlet var mapView: MKMapView!
     
     let locationManager = CLLocationManager()
-    var managedObjectContext: NSManagedObjectContext
     var currentCategory: NSMutableArray
     var masterDelegate: MasterDelegate?
     var categotyId: String?
     
     required init?(coder aDecoder: NSCoder) {
         self.currentCategory = NSMutableArray()
-        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-        self.managedObjectContext = appDelegate.managedObjectContext
         super.init(coder: aDecoder)
     }
     
@@ -55,7 +52,8 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate, CLLocation
             showCategoryOnMap()
         }
     }
-    
+   
+    // display category on map
     func showCategoryOnMap() {
         let allAnnotations = self.mapView.annotations
         self.mapView.removeAnnotations(allAnnotations)
@@ -78,6 +76,7 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate, CLLocation
         self.mapView.setRegion(region, animated: true)
     }
     
+    // add radius layer for the category
     func mapView(mapView: MKMapView, rendererForOverlay overlay: MKOverlay) -> MKOverlayRenderer {
         if let overlay = overlay as? MKCircle {
             let circleRenderer = MKCircleRenderer(circle: overlay)
@@ -87,12 +86,10 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate, CLLocation
         return MKOverlayRenderer()
     }
     
-    // add info button for each annotation on map to jump to rehabilitation detail controller
-    // solution from: http://stackoverflow.com/questions/28225296/how-to-add-a-button-to-mkpointannotation
+    // annotation view
     func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
         
         if annotation is MKUserLocation {
-            //return nil
             return nil
         }
         if annotation is MKPointAnnotation {
@@ -123,6 +120,7 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate, CLLocation
         return nil
     }
     
+    // jump to reminder list view
     func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
         if control == view.rightCalloutAccessoryView {
             self.categotyId = self.mapView.selectedAnnotations[0].subtitle!
@@ -135,43 +133,10 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate, CLLocation
         {
             let theDestination = (segue.destinationViewController as! UINavigationController).topViewController as! ReminderTableViewController
             let url = NSURL(string: self.categotyId!)
-            let id = (managedObjectContext.persistentStoreCoordinator?.managedObjectIDForURIRepresentation(url!))! as NSManagedObjectID
-            theDestination.catogory = managedObjectContext.objectWithID(id) as! Category
+            let id = (DataManager.dataManager.managedObjectContext!.persistentStoreCoordinator?.managedObjectIDForURIRepresentation(url!))! as NSManagedObjectID
+            theDestination.catogory = DataManager.dataManager.managedObjectContext!.objectWithID(id) as! Category
         }
     }
-    
-//    func changeColor(color:String, pin: MKPinAnnotationView) {
-//        switch color {
-//        case "purple":
-//            pin.tintColor = UIColor(red: 166/255.0, green: 116/255.0, blue: 233/255.0, alpha: 1.0)
-//            break
-//        case "blue":
-//            pin.tintColor = UIColor(red: 77/255.0, green: 202/255.0, blue: 233/255.0, alpha: 1.0)
-//            break
-//        case "green":
-//            pin.tintColor = UIColor(red: 112/255.0, green: 215/255.0, blue: 89/255.0, alpha: 1.0)
-//            break
-//        case "red":
-//            pin.tintColor = UIColor(red: 254/255.0, green: 76/255.0, blue: 52/255.0, alpha: 1.0)
-//            break
-//        case "orange":
-//            pin.tintColor = UIColor(red: 249/255.0, green: 140/255.0, blue: 34/255.0, alpha: 1.0)
-//            break
-//        case "pink":
-//            pin.tintColor = UIColor(red: 248/255.0, green: 136/255.0, blue: 223/255.0, alpha: 1.0)
-//            break
-//        case "yellow":
-//            pin.tintColor = UIColor(red: 243/255.0, green: 242/255.0, blue: 103/255.0, alpha: 1.0)
-//            break
-//        case "black":
-//            pin.tintColor = UIColor.blackColor()
-//            break
-//        default:
-//            pin.tintColor = UIColor.blackColor()
-//            break
-//        }
-//    }
-
     
 
     /*

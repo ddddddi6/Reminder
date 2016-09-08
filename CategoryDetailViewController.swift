@@ -37,13 +37,6 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
     
     var masterDelegate: MasterDelegate?
     var category: Category!
-    var managedObjectContext: NSManagedObjectContext
-    
-    required init?(coder aDecoder: NSCoder) {
-        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-        self.managedObjectContext = appDelegate.managedObjectContext
-        super.init(coder: aDecoder)
-    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -53,6 +46,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
         radius = 50
         labelColor = "black"
         
+        // check the mode of the controller, new or edit
         if category == nil {
             self.title = "New Category"
         } else {
@@ -86,6 +80,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
         super.viewWillAppear(animated)
     }
     
+    // when the controller is for editting, then display the category details for user
     func showCategoryDetail() {
         self.titleField.text = category.title
         changeColor(category.color!, textField: self.titleField)
@@ -145,6 +140,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
         self.mapView.setRegion(region, animated: true)
     }
     
+    // change the title color
     func changeColor(color:String, textField: UITextField) {
         switch color {
         case "purple":
@@ -177,6 +173,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
         }
     }
     
+    // check whether user allow the application to push a notification
     @IBAction func sendReminder(sender: UISwitch) {
         if remindSwitch.on {
             radiusSegment.enabled = true
@@ -186,10 +183,12 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
         }
     }
     
+    // cancel input
     @IBAction func cancelAction(sender: UIBarButtonItem) {
         self.dismissViewControllerAnimated(true, completion: nil)
     }
     
+    // save input
     @IBAction func doneAction(sender: UIBarButtonItem) {
         
         let title = self.titleField.text
@@ -220,7 +219,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
         } else {
             if (category == nil) {
                 category = (NSEntityDescription.insertNewObjectForEntityForName("Category",
-                inManagedObjectContext: self.managedObjectContext) as? Category)!
+                inManagedObjectContext: DataManager.dataManager.managedObjectContext!) as? Category)!
             }
             category.title = title
             category.address = address
@@ -231,9 +230,9 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
             category.priority = priority
             category.radius = radius
             //self.delegate!.reloadCategory()
-            if self.managedObjectContext.hasChanges {
+            if DataManager.dataManager.managedObjectContext!.hasChanges {
                 do {
-                    try self.managedObjectContext.save()
+                    try DataManager.dataManager.managedObjectContext!.save()
                 } catch {
                     // Replace this implementation with code to handle the error appropriately.
                     // abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
@@ -248,6 +247,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
         }
     }
     
+    // search location
     func searchBarSearchButtonClicked(searchBar: UISearchBar) {
         address = searchBar.text
         if(address.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet()) == "")
@@ -268,6 +268,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
 
     }
     
+    // display searching result on a map
     func displayLocation(address: String) {
         if self.mapView.annotations.count != 0{
             annotation = self.mapView.annotations[0]
@@ -301,6 +302,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
         }
     }
 
+    // listen for prority segment control change
     @IBAction func setPriority(sender: UISegmentedControl) {
         switch prioritySegment.selectedSegmentIndex
         {
@@ -321,6 +323,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
         }
     }
     
+    // listen for radius segment control change
     @IBAction func setRadius(sender: UISegmentedControl) {
         switch radiusSegment.selectedSegmentIndex {
         case 0:
@@ -337,6 +340,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
         }
     }
     
+    // listen for color buttons
     @IBAction func showInPurple(sender: UIButton) {
         labelColor = "purple"
         changeColor(labelColor, textField: self.titleField)
@@ -366,7 +370,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
         changeColor(labelColor, textField: self.titleField)
     }
     
-    // dismiss keyboard for search bar
+    // dismiss keyboard for text field
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?){
         view.endEditing(true)
         super.touchesBegan(touches, withEvent: event)

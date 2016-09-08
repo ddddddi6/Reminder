@@ -19,15 +19,11 @@ class ReminderTableViewController: UITableViewController, ReminderListDelegate {
     @IBOutlet var addReminderItem: UIBarButtonItem!
     
     var catogory: Category!
-    
-    var managedObjectContext: NSManagedObjectContext
     var currentReminder: NSMutableArray
     
     
     required init?(coder aDecoder: NSCoder) {
         self.currentReminder = NSMutableArray()
-        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-        self.managedObjectContext = appDelegate.managedObjectContext
         super.init(coder: aDecoder)
     }
 
@@ -35,9 +31,9 @@ class ReminderTableViewController: UITableViewController, ReminderListDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        // check whether user has selected a catogory to display
         if (catogory != nil) {
             refreshTable()
-            self.currentReminder = NSMutableArray(array: (catogory!.tasks?.allObjects as! [Reminder]))
             addReminderItem.enabled = true
         } else {
             self.infoLabel.text = " Please select a category"
@@ -87,13 +83,20 @@ class ReminderTableViewController: UITableViewController, ReminderListDelegate {
         } else {
             cell.deadline.text = "Not available"
         }
+
+        // display overdued reminder entry in red, normal reminder entry in black
+        if (r.deadline != nil && (r.deadline?.compare(NSDate())) == NSComparisonResult.OrderedAscending) {
+            cell.reminderTitle.textColor = UIColor.redColor()
+            cell.deadline.textColor = UIColor.redColor()
+        } else {
+            cell.reminderTitle.textColor = UIColor.blackColor()
+            cell.deadline.textColor = UIColor.blackColor()
+        }
+        
+        // display completed reminder entry in gray
         if r.isComplete == true {
             cell.reminderTitle.textColor = UIColor.grayColor()
             cell.deadline.textColor = UIColor.grayColor()
-        }
-        if ((r.deadline?.compare(NSDate())) == NSComparisonResult.OrderedAscending) {
-            cell.reminderTitle.textColor = UIColor.redColor()
-            cell.deadline.textColor = UIColor.redColor()
         }
         return cell
     }
@@ -112,41 +115,28 @@ class ReminderTableViewController: UITableViewController, ReminderListDelegate {
     {
         let delete = UITableViewRowAction(style: .Default, title: "Delete") { action, index in
             // Delete the row from the data source
-            self.managedObjectContext.deleteObject(self.currentReminder[indexPath.row] as! NSManagedObject)
+            DataManager.dataManager.managedObjectContext!.deleteObject(self.currentReminder[indexPath.row] as! NSManagedObject)
             //Save the ManagedObjectContext
             do
             {
-                try self.managedObjectContext.save()
+                try DataManager.dataManager.managedObjectContext!.save()
             }
             catch let error
             {
                 print("Could not save Deletion \(error)")
             }
             
-            self.currentReminder = self.getReminders()
+            self.currentReminder = DataManager.dataManager.getReminders(self.catogory)
             self.tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
         }
         //self.refreshTable()
         return [delete]
     }
-
-    func getReminders() -> NSMutableArray {
-        let result = catogory!.tasks?.allObjects as! [Reminder]
-        if result.count == 0
-        {
-            currentReminder = []
-        }
-        else
-        {
-            self.currentReminder = NSMutableArray(array: result)
-        }
-        
-        return currentReminder
-    }
     
+    // reload data
     func refreshTable() {
         self.title = catogory.title
-        currentReminder = getReminders()
+        currentReminder = DataManager.dataManager.getReminders(catogory)
         if (currentReminder.count == 0) {
             self.infoLabel.text = "  There is no reminder"
         } else if (currentReminder.count == 1) {
@@ -157,6 +147,7 @@ class ReminderTableViewController: UITableViewController, ReminderListDelegate {
         sortReminderList ()
     }
 
+    // add a new reminder entry
     @IBAction func addReminder(sender: UIBarButtonItem) {
         self.performSegueWithIdentifier("addNewReminder", sender: self)
     }
@@ -179,7 +170,7 @@ class ReminderTableViewController: UITableViewController, ReminderListDelegate {
                 
                 theDestination.category = catogory
                 theDestination.delegate = self
-            // Display reminder details screen
+            // Display new reminder screen
             }
         } else if (segue.identifier == "editReminder") {
             if catogory == nil {
@@ -201,29 +192,32 @@ class ReminderTableViewController: UITableViewController, ReminderListDelegate {
                 theDestination.delegate = self
                 // Display reminder details screen
             }
-
         }
     }
     
+    // sort the reminder list
     func sortReminderList () {
             currentReminder.sortUsingComparator({ (o1: AnyObject!, o2: AnyObject!) -> NSComparisonResult in
             let reminder1 = o1 as! Reminder
             let reminder2 = o2 as! Reminder
-            if (reminder1.isComplete!.boolValue && !reminder2.isComplete!.boolValue) {
-                return .OrderedDescending
-            }
-            if (!reminder1.isComplete!.boolValue && reminder2.isComplete!.boolValue) {
+            if (reminder1.deadline != nil || reminder2.deadline != nil) {
+                // reminder hasn't been completed should be placed at first
+                if (reminder1.isComplete!.boolValue && !reminder2.isComplete!.boolValue) {
+                    return .OrderedDescending
+                } else if (!reminder1.isComplete!.boolValue && reminder2.isComplete!.boolValue) {
+                    return .OrderedAscending
+                }
+                // reminder contains a due date should be palced at first
+                if (reminder1.deadline != nil && reminder2.deadline == nil) {
+                    return .OrderedAscending
+                } else if (reminder1.deadline == nil && reminder2.deadline != nil) {
+                    return .OrderedDescending
+                }
+                return reminder1.deadline!.compare(reminder2.deadline!)
+                }
                 return .OrderedAscending
-            }
-            if (reminder1.deadline != nil && reminder2.deadline == nil) {
-                return .OrderedAscending
-            }
-            if (reminder1.deadline == nil && reminder2.deadline != nil) {
-                return .OrderedDescending
-            }
-            return reminder1.deadline!.compare(reminder2.deadline!)
         })
-        tableView.reloadData()
+        self.tableView.reloadData()
     }
     
     

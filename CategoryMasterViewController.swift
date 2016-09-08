@@ -13,24 +13,21 @@ import MapKit
 protocol MasterDelegate {
     func refreshTableView()
     func refreshMapView()
-    func getTableView() -> UISplitViewController
 }
 
 class CategoryMasterViewController: UIViewController, MasterDelegate, CLLocationManagerDelegate {
     
     let locationManager = CLLocationManager()
     
-    var managedObjectContext: NSManagedObjectContext
     var currentCategory: NSMutableArray
     var detailViewController: ReminderTableViewController? = nil
     
     required init?(coder aDecoder: NSCoder) {
         self.currentCategory = NSMutableArray()
-        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-        self.managedObjectContext = appDelegate.managedObjectContext
         super.init(coder: aDecoder)
     }
 
+    // add a new category
     @IBAction func addCategory(sender: UIBarButtonItem) {
         self.performSegueWithIdentifier("addCategorySegue", sender: self)
     }
@@ -39,6 +36,8 @@ class CategoryMasterViewController: UIViewController, MasterDelegate, CLLocation
     @IBOutlet var viewSegment: UISegmentedControl!
     @IBOutlet var categoryList: UIView!
     @IBOutlet var categoryMap: UIView!
+    
+    // listen for switching viewsa
     @IBAction func segmentedMenu(sender: UISegmentedControl) {
         switch viewSegment.selectedSegmentIndex {
         case 0:
@@ -71,7 +70,6 @@ class CategoryMasterViewController: UIViewController, MasterDelegate, CLLocation
         
         setupGeofencing()
         
-
         // Ask user for permission to use location
         // Uses description from NSLocationAlwaysUsageDescription in Info.plist
         locationManager.requestAlwaysAuthorization()
@@ -86,42 +84,37 @@ class CategoryMasterViewController: UIViewController, MasterDelegate, CLLocation
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if (segue.identifier == "TransitionToCategoryTableView") {
             let categoryTableViewController = segue.destinationViewController  as! CategoryTableViewController
-            categoryTableViewController.currentCategory = getCategories()
+            categoryTableViewController.currentCategory = DataManager.dataManager.getCategories()
             categoryTableViewController.masterDelegate = self
             // Pass data to secondViewController before the transition
         } else if (segue.identifier == "TransitionToCategoryMapView") {
             let categoryMapViewController = segue.destinationViewController  as! CategoryMapViewController
-            categoryMapViewController.currentCategory = getCategories()
+            categoryMapViewController.currentCategory = DataManager.dataManager.getCategories()
         } else if (segue.identifier == "addCategorySegue") {
             let categoryDetailViewController = (segue.destinationViewController as! UINavigationController).topViewController  as! CategoryDetailViewController
-            //categoryDetailViewController.currentCategory = currentCategory
             categoryDetailViewController.masterDelegate = self
             // Pass data to secondViewController before the transition
         } 
     }
     
+    // refresh child tableviwe
     func refreshTableView() {
         let categoryTable = self.childViewControllers[1] as! UITableViewController as! CategoryTableViewController
-        categoryTable.currentCategory = getCategories()
+        categoryTable.currentCategory = DataManager.dataManager.getCategories()
         categoryTable.tableView.reloadData()
     }
     
+    // refresh child mapview
     func refreshMapView() {
         let categoryMap = self.childViewControllers[0] as! CategoryMapViewController
-        categoryMap.currentCategory = getCategories()
-        if getCategories().count != 0 {
+        categoryMap.currentCategory = DataManager.dataManager.getCategories()
+        if DataManager.dataManager.getCategories().count != 0 {
             categoryMap.showCategoryOnMap()
         }
 
     }
     
-    func getTableView() -> UISplitViewController {
-//        let categoryTable = self.childViewControllers[1] as! UITableViewController as! CategoryTableViewController
-//        return categoryTable
-        let view = self.splitViewController as! GlobalSplitViewController
-        return view
-    }
-    
+    // edit table for rearranging the order
     @IBAction func editTable(sender: UIBarButtonItem) {
         let categoryTable = self.childViewControllers[1] as! UITableViewController as! CategoryTableViewController
         self.navigationItem.leftBarButtonItem = categoryTable.editButtonItem()
@@ -135,33 +128,22 @@ class CategoryMasterViewController: UIViewController, MasterDelegate, CLLocation
         }
     }
     
-    func getCategories() -> NSMutableArray {
-        let fetchRequest = NSFetchRequest()
-        let entityDescription = NSEntityDescription.entityForName("Category", inManagedObjectContext:
-            self.managedObjectContext)
-        fetchRequest.entity = entityDescription
-        
-        var result = NSArray?()
-        do
-        {
-            result = try self.managedObjectContext.executeFetchRequest(fetchRequest)
-            if result!.count == 0
-            {
-                currentCategory = []
-            }
-            else
-            {
-                currentCategory = NSMutableArray(array: result!)
+    // set up geofencing
+    func setupGeofencing() {
+        for category in currentCategory {
+            let c: Category = category as! Category
+            if (c.isRemind == true && checkReminderCompletion(c) == true) {
+                let region = (name:c.title, coordinate:CLLocationCoordinate2D(latitude: Double(c.latitude!), longitude: Double(c.longitude!)))
+                // Setup geofence monitoring
+                print("Monitoring \(region.name) region")
+                // Using radius from center of location
+                let geofence = CLCircularRegion(center: region.coordinate, radius: Double(c.radius!), identifier: region.name!)
+                locationManager.startMonitoringForRegion(geofence)
             }
         }
-        catch
-        {
-            let fetchError = error as NSError
-            print(fetchError)
-        }
-        return currentCategory
     }
-
+    
+    // check the completion status of reminder
     func checkReminderCompletion(c: Category) -> Bool{
         let reminders = NSMutableArray(array: (c.tasks?.allObjects as! [Reminder]))
         if reminders.count != 0 {
@@ -175,26 +157,13 @@ class CategoryMasterViewController: UIViewController, MasterDelegate, CLLocation
         return false
     }
     
-    func setupGeofencing() {
-        for category in currentCategory {
-            let c: Category = category as! Category
-            if checkReminderCompletion(c) == true {
-                let region = (name:c.title, coordinate:CLLocationCoordinate2D(latitude: Double(c.latitude!), longitude: Double(c.longitude!)))
-                // Setup geofence monitoring
-                print("Monitoring \(region.name) region")
-                // Using radius from center of location
-                let geofence = CLCircularRegion(center: region.coordinate, radius: Double(c.radius!), identifier: region.name!)
-                locationManager.startMonitoringForRegion(geofence)
-            }
-        }
-    }
-    
+    // Arrive at the region
     func locationManager(manager: CLLocationManager, didEnterRegion region: CLRegion) {
         print("Entered region \(region.identifier)")
         
         // Notify the user when they have entered a region
         let title = "Entered new region"
-        let message = "You have arrived at \(region.identifier)."
+        let message = "There are tasks need to be done at \(region.identifier)."
         
         if UIApplication.sharedApplication().applicationState == .Active {
             // App is active, show an alert
@@ -213,12 +182,13 @@ class CategoryMasterViewController: UIViewController, MasterDelegate, CLLocation
         }
     }
     
+    // Exit from the region
     func locationManager(manager: CLLocationManager, didExitRegion region: CLRegion) {
         print("Exited region \(region.identifier)")
         
         // Notify the user when they have entered a region
         let title = "Exit region"
-        let message = "You have exited from \(region.identifier)."
+        let message = "Did you finish all tasks at \(region.identifier)?"
         
         if UIApplication.sharedApplication().applicationState == .Active {
             // App is active, show an alert
