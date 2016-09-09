@@ -83,7 +83,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
     // when the controller is for editting, then display the category details for user
     func showCategoryDetail() {
         self.titleField.text = category.title
-        changeColor(category.color!, textField: self.titleField)
+        self.titleField.textColor = ColorManager.colorManager.changeColor(category.color!)
         self.labelColor = category.color
         self.priority = Int(category.priority!)
         self.radius = Int(category.radius!)
@@ -140,38 +140,6 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
         self.mapView.setRegion(region, animated: true)
     }
     
-    // change the title color
-    func changeColor(color:String, textField: UITextField) {
-        switch color {
-        case "purple":
-            textField.textColor = UIColor(red: 166/255.0, green: 116/255.0, blue: 233/255.0, alpha: 1.0)
-            break
-        case "blue":
-            textField.textColor = UIColor(red: 77/255.0, green: 202/255.0, blue: 233/255.0, alpha: 1.0)
-            break
-        case "green":
-            textField.textColor = UIColor(red: 112/255.0, green: 215/255.0, blue: 89/255.0, alpha: 1.0)
-            break
-        case "red":
-            textField.textColor = UIColor(red: 254/255.0, green: 76/255.0, blue: 52/255.0, alpha: 1.0)
-            break
-        case "orange":
-            textField.textColor = UIColor(red: 249/255.0, green: 140/255.0, blue: 34/255.0, alpha: 1.0)
-            break
-        case "pink":
-            textField.textColor = UIColor(red: 248/255.0, green: 136/255.0, blue: 223/255.0, alpha: 1.0)
-            break
-        case "yellow":
-            textField.textColor = UIColor(red: 243/255.0, green: 242/255.0, blue: 103/255.0, alpha: 1.0)
-            break
-        case "black":
-            textField.textColor = UIColor.blackColor()
-            break
-        default:
-            textField.textColor = UIColor.blackColor()
-            break
-        }
-    }
     
     // check whether user allow the application to push a notification
     @IBAction func sendReminder(sender: UISwitch) {
@@ -335,31 +303,31 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
     // listen for color buttons
     @IBAction func showInPurple(sender: UIButton) {
         labelColor = "purple"
-        changeColor(labelColor, textField: self.titleField)
+        self.titleField.textColor = ColorManager.colorManager.changeColor("purple")
     }
     @IBAction func showInBlue(sender: UIButton) {
         labelColor = "blue"
-        changeColor(labelColor, textField: self.titleField)
+        self.titleField.textColor = ColorManager.colorManager.changeColor("blue")
     }
     @IBAction func showInRed(sender: UIButton) {
         labelColor = "red"
-        changeColor(labelColor, textField: self.titleField)
+        self.titleField.textColor = ColorManager.colorManager.changeColor("red")
     }
     @IBAction func showInPink(sender: UIButton) {
         labelColor = "pink"
-        changeColor(labelColor, textField: self.titleField)
+        self.titleField.textColor = ColorManager.colorManager.changeColor("pink")
     }
     @IBAction func showInYellow(sender: UIButton) {
         labelColor = "yellow"
-        changeColor(labelColor, textField: self.titleField)
+        self.titleField.textColor = ColorManager.colorManager.changeColor("yellow")
     }
     @IBAction func showInGreen(sender: UIButton) {
         labelColor = "green"
-        changeColor(labelColor, textField: self.titleField)
+        self.titleField.textColor = ColorManager.colorManager.changeColor("green")
     }
     @IBAction func showInOrange(sender: UIButton) {
         labelColor = "orange"
-        changeColor(labelColor, textField: self.titleField)
+        self.titleField.textColor = ColorManager.colorManager.changeColor("orange")
     }
     
     // dismiss keyboard for text field

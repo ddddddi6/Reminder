@@ -65,7 +65,7 @@ class CategoryTableViewController: UITableViewController {
         // Configure the cell...
         let c: Category = self.currentCategory[indexPath.row] as! Category
         cell.categoryTitle.text = c.title
-        changeColor(c.color!, lable: cell.categoryTitle)
+        cell.categoryTitle.textColor = ColorManager.colorManager.changeColor(c.color!)
         return cell
     }
     
@@ -132,39 +132,6 @@ class CategoryTableViewController: UITableViewController {
                 let theDestination = (segue.destinationViewController as! UINavigationController).topViewController as! ReminderTableViewController
                 theDestination.catogory = currentCategory[indexPath.row] as! Category
             }
-        }
-    }
-
-    // change title color
-    func changeColor(color:String, lable: UILabel) {
-        switch color {
-        case "purple":
-            lable.textColor = UIColor(red: 166/255.0, green: 116/255.0, blue: 233/255.0, alpha: 1.0)
-            break
-        case "blue":
-            lable.textColor = UIColor(red: 77/255.0, green: 202/255.0, blue: 233/255.0, alpha: 1.0)
-            break
-        case "green":
-            lable.textColor = UIColor(red: 112/255.0, green: 215/255.0, blue: 89/255.0, alpha: 1.0)
-            break
-        case "red":
-            lable.textColor = UIColor(red: 254/255.0, green: 76/255.0, blue: 52/255.0, alpha: 1.0)
-            break
-        case "orange":
-            lable.textColor = UIColor(red: 249/255.0, green: 140/255.0, blue: 34/255.0, alpha: 1.0)
-            break
-        case "pink":
-            lable.textColor = UIColor(red: 248/255.0, green: 136/255.0, blue: 223/255.0, alpha: 1.0)
-            break
-        case "yellow":
-            lable.textColor = UIColor(red: 243/255.0, green: 242/255.0, blue: 103/255.0, alpha: 1.0)
-            break
-        case "black":
-            lable.textColor = UIColor.blackColor()
-            break
-        default:
-            lable.textColor = UIColor.blackColor()
-            break
         }
     }
 

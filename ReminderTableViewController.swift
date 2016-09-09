@@ -27,7 +27,6 @@ class ReminderTableViewController: UITableViewController, ReminderListDelegate {
         super.init(coder: aDecoder)
     }
 
-    
     override func viewDidLoad() {
         super.viewDidLoad()
 

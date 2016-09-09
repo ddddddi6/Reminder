@@ -111,11 +111,24 @@ class ReminderDetailViewController: UIViewController {
             reminder.note = note
             category.addReminder(reminder)
             DataManager.dataManager.saveData()
+            pushNotification(reminder.deadline!)
             delegate?.refreshTable()
             self.navigationController?.popToRootViewControllerAnimated(true)
         }
     }
 
+    // push notification when reminder due
+    func pushNotification(deadline: NSDate) {
+        // create a corresponding local notification
+        let notification = UILocalNotification()
+        //notification.alertTitle = title
+        notification.alertBody = "You have task due now."
+        notification.alertAction = "open"
+        notification.fireDate = deadline
+        notification.soundName = UILocalNotificationDefaultSoundName
+        UIApplication.sharedApplication().scheduleLocalNotification(notification)
+    }
+    
     // cancel the input and back to previous controller
     @IBAction func cancelAction(sender: UIBarButtonItem) {
         self.navigationController?.popToRootViewControllerAnimated(true)

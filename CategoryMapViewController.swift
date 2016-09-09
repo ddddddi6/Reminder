@@ -21,9 +21,13 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate, CLLocation
     @IBOutlet var mapView: MKMapView!
     
     let locationManager = CLLocationManager()
+    //var currentLocationManager: CLLocationManager!
+    var latitude: String!
+    var longitude: String!
     var currentCategory: NSMutableArray
     var masterDelegate: MasterDelegate?
     var categotyId: String?
+    var color: String?
     
     required init?(coder aDecoder: NSCoder) {
         self.currentCategory = NSMutableArray()
@@ -35,9 +39,15 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate, CLLocation
         if currentCategory.count != 0 {
             showCategoryOnMap()
         }
+        
         // Setup delegation so we can respond to MapView and LocationManager events
         mapView.delegate = self
         locationManager.delegate = self
+        self.locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+        
+        self.locationManager.startUpdatingLocation()
+        
+        self.mapView.showsUserLocation = true
         
         // Ask user for permission to use location
         // Uses description from NSLocationAlwaysUsageDescription in Info.plist
@@ -57,6 +67,26 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate, CLLocation
             showCategoryOnMap()
         }
     }
+    
+    // get current location and then search nearby stops
+    func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        
+        let location = locations.last! as CLLocation
+        
+        NSLog("Found \(location.coordinate.latitude) \(location.coordinate.longitude)")
+        
+        if (self.latitude == nil && self.longitude == nil) {
+            self.latitude = String(location.coordinate.latitude)
+            self.longitude = String(location.coordinate.longitude)
+            
+            let center = CLLocationCoordinate2D(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)
+            let region = MKCoordinateRegion(center: center, span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1))
+            
+            self.mapView.setRegion(region, animated: true)
+            self.locationManager.stopUpdatingLocation()
+            
+        }
+    }
    
     // display category on map
     func showCategoryOnMap() {
@@ -70,6 +100,7 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate, CLLocation
             let objectAnnotation = MKPointAnnotation()
             objectAnnotation.coordinate = pinLocation
             objectAnnotation.title = c.title
+            self.color = c.color!
             objectAnnotation.subtitle = c.objectID.URIRepresentation().absoluteString
             let rad = CLLocationDistance(c.radius!)
             self.mapView.addOverlay(MKCircle(centerCoordinate: pinLocation, radius: rad))
@@ -85,7 +116,7 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate, CLLocation
     func mapView(mapView: MKMapView, rendererForOverlay overlay: MKOverlay) -> MKOverlayRenderer {
         if let overlay = overlay as? MKCircle {
             let circleRenderer = MKCircleRenderer(circle: overlay)
-            circleRenderer.fillColor = UIColor(red: 254/255.0, green: 76/255.0, blue: 52/255.0, alpha: 0.5)
+            circleRenderer.fillColor = ColorManager.colorManager.changeColor(color!).colorWithAlphaComponent(0.5)
             return circleRenderer
         }
         return MKOverlayRenderer()
@@ -108,6 +139,10 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate, CLLocation
             pinView!.animatesDrop = true
         } else {
             pinView?.annotation = annotation
+            let url = NSURL(string: ((pinView?.annotation?.subtitle)!)!)
+            let id = (DataManager.dataManager.managedObjectContext!.persistentStoreCoordinator?.managedObjectIDForURIRepresentation(url!))! as NSManagedObjectID
+            let catogory = DataManager.dataManager.managedObjectContext!.objectWithID(id) as! Category
+            pinView?.pinTintColor = ColorManager.colorManager.changeColor(catogory.color!)
         }
         
         let button = UIButton(type: .DetailDisclosure) as UIButton // button with info sign in it
@@ -142,6 +177,7 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate, CLLocation
             theDestination.catogory = DataManager.dataManager.managedObjectContext!.objectWithID(id) as! Category
         }
     }
+    
     
 
     /*
