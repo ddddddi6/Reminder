@@ -12,6 +12,12 @@ import CoreData
 
 class CategoryMapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDelegate {
 
+    @IBOutlet var toolBar: UIToolbar! {
+        didSet {
+            
+            toolBar.setItems([MKUserTrackingBarButtonItem(mapView: mapView)], animated: false)
+        }
+    }
     @IBOutlet var mapView: MKMapView!
     
     let locationManager = CLLocationManager()
@@ -26,7 +32,6 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate, CLLocation
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
         if currentCategory.count != 0 {
             showCategoryOnMap()
         }

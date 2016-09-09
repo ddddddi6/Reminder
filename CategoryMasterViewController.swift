@@ -13,14 +13,13 @@ import MapKit
 protocol MasterDelegate {
     func refreshTableView()
     func refreshMapView()
+    func popupEnterAlert(didEnterRegion region: CLRegion)
+    func popupExitAlert(didExitRegion region: CLRegion)
 }
 
 class CategoryMasterViewController: UIViewController, MasterDelegate, CLLocationManagerDelegate {
     
-    let locationManager = CLLocationManager()
-    
     var currentCategory: NSMutableArray
-    var detailViewController: ReminderTableViewController? = nil
     
     required init?(coder aDecoder: NSCoder) {
         self.currentCategory = NSMutableArray()
@@ -66,13 +65,8 @@ class CategoryMasterViewController: UIViewController, MasterDelegate, CLLocation
         
         viewSegment.selectedSegmentIndex = 0
         
-        locationManager.delegate = self
-        
-        setupGeofencing()
-        
-        // Ask user for permission to use location
-        // Uses description from NSLocationAlwaysUsageDescription in Info.plist
-        locationManager.requestAlwaysAuthorization()
+        DataManager.dataManager.delegate = self
+    
         // Do any additional setup after loading the view.
     }
 
@@ -128,67 +122,23 @@ class CategoryMasterViewController: UIViewController, MasterDelegate, CLLocation
         }
     }
     
-    // set up geofencing
-    func setupGeofencing() {
-        for category in currentCategory {
-            let c: Category = category as! Category
-            if (c.isRemind == true && checkReminderCompletion(c) == true) {
-                let region = (name:c.title, coordinate:CLLocationCoordinate2D(latitude: Double(c.latitude!), longitude: Double(c.longitude!)))
-                // Setup geofence monitoring
-                print("Monitoring \(region.name) region")
-                // Using radius from center of location
-                let geofence = CLCircularRegion(center: region.coordinate, radius: Double(c.radius!), identifier: region.name!)
-                locationManager.startMonitoringForRegion(geofence)
-            }
-        }
-    }
-    
-    // check the completion status of reminder
-    func checkReminderCompletion(c: Category) -> Bool{
-        let reminders = NSMutableArray(array: (c.tasks?.allObjects as! [Reminder]))
-        if reminders.count != 0 {
-            for reminder in reminders {
-                let r: Reminder = reminder as! Reminder
-                if r.isComplete == false {
-                    return true
-                }
-            }
-        }
-        return false
-    }
-    
-    // Arrive at the region
-    func locationManager(manager: CLLocationManager, didEnterRegion region: CLRegion) {
-        print("Entered region \(region.identifier)")
-        
+    // Popup an alert for user when the application is active
+    func popupEnterAlert(didEnterRegion region: CLRegion) {
         // Notify the user when they have entered a region
-        let title = "Entered new region"
         let message = "There are tasks need to be done at \(region.identifier)."
+        let title = "Reminder"
         
-        if UIApplication.sharedApplication().applicationState == .Active {
-            // App is active, show an alert
-            let alertController = UIAlertController(title: title, message: message, preferredStyle: .Alert)
-            let alertAction = UIAlertAction(title: "OK", style: .Default, handler: nil)
-            alertController.addAction(alertAction)
-            self.presentViewController(alertController, animated: true, completion: nil)
-        } else {
-            // App is inactive, show a notification
-            let notification = UILocalNotification()
-            notification.alertTitle = title
-            notification.alertBody = message
-            notification.soundName = UILocalNotificationDefaultSoundName
-            notification.fireDate = NSDate()
-            UIApplication.sharedApplication().presentLocalNotificationNow(notification)
-        }
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .Alert)
+        let alertAction = UIAlertAction(title: "OK", style: .Default, handler: nil)
+        alertController.addAction(alertAction)
+        self.presentViewController(alertController, animated: true, completion: nil)
+        
     }
     
-    // Exit from the region
-    func locationManager(manager: CLLocationManager, didExitRegion region: CLRegion) {
-        print("Exited region \(region.identifier)")
-        
+    func popupExitAlert(didExitRegion region: CLRegion) {
         // Notify the user when they have entered a region
-        let title = "Exit region"
         let message = "Did you finish all tasks at \(region.identifier)?"
+        let title = "Reminder"
         
         if UIApplication.sharedApplication().applicationState == .Active {
             // App is active, show an alert
@@ -196,17 +146,8 @@ class CategoryMasterViewController: UIViewController, MasterDelegate, CLLocation
             let alertAction = UIAlertAction(title: "OK", style: .Default, handler: nil)
             alertController.addAction(alertAction)
             self.presentViewController(alertController, animated: true, completion: nil)
-        } else {
-            // App is inactive, show a notification
-            let notification = UILocalNotification()
-            notification.alertTitle = title
-            notification.alertBody = message
-            notification.soundName = UILocalNotificationDefaultSoundName
-            notification.fireDate = NSDate()
-            UIApplication.sharedApplication().presentLocalNotificationNow(notification)
         }
     }
-
 
     /*
     // MARK: - Navigation
