@@ -95,6 +95,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
         } else {
             remindSwitch.setOn(false, animated: true)
         }
+        // prority segment controller
         switch priority {
         case 0:
             prioritySegment.selectedSegmentIndex = 0
@@ -111,6 +112,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
         default:
             break
         }
+        // radius segment controller
         switch radius {
         case 50:
             radiusSegment.selectedSegmentIndex = 0
@@ -124,6 +126,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
         default:
             break
         }
+        // display denifined address on map
         self.searchBar.text = category.address
         if self.mapView.annotations.count != 0{
             annotation = self.mapView.annotations[0]
@@ -162,9 +165,10 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
         let title = self.titleField.text
         let isRemind = self.remindSwitch.on
         
+        // check input validation
         if(title!.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet()) == "")
         {
-            let messageString: String = "Please input valid title"
+            let messageString: String = "Please input a category valid title"
             // Setup an alert to warn user
             // UIAlertController manages an alert instance
             let alertController = UIAlertController(title: "Alert", message: messageString, preferredStyle:
@@ -175,7 +179,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
             self.presentViewController(alertController, animated: true, completion: nil)
             
         } else if(self.searchBar.text!.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet()) == "" || self.latitude == nil || self.longitude == nil) {
-            let messageString: String = "Please input valid address"
+            let messageString: String = "Please input a valid address"
             // Setup an alert to warn user
             // UIAlertController manages an alert instance
             let alertController = UIAlertController(title: "Alert", message: messageString, preferredStyle:
@@ -197,7 +201,6 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
             category.longitude = longitude
             category.priority = priority
             category.radius = radius
-            //self.delegate!.reloadCategory()
 
             DataManager.dataManager.saveData()
 
@@ -212,7 +215,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
         address = searchBar.text
         if(address.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet()) == "")
         {
-            let messageString: String = "Please input valid address"
+            let messageString: String = "Please input a valid address"
             // Setup an alert to warn user
             // UIAlertController manages an alert instance
             let alertController = UIAlertController(title: "Alert", message: messageString, preferredStyle:
@@ -236,7 +239,7 @@ class CategoryDetailViewController: UIViewController, UISearchBarDelegate, MKMap
         }
         
         localSearchRequest = MKLocalSearchRequest()
-        localSearchRequest.naturalLanguageQuery = address + " " + "Victoria Australia"
+        localSearchRequest.naturalLanguageQuery = address + " " + " Victoria Australia"
         localSearch = MKLocalSearch(request: localSearchRequest)
         localSearch.startWithCompletionHandler { (localSearchResponse, error) -> Void in
             

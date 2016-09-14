@@ -45,7 +45,7 @@ class DataManager: NSObject, CLLocationManagerDelegate {
         }
     }
     
-    // get category list
+    // get category list from coredata
     func getCategories() -> NSMutableArray {
         var currentCategory: NSMutableArray!
         let fetchRequest = NSFetchRequest()
@@ -74,7 +74,7 @@ class DataManager: NSObject, CLLocationManagerDelegate {
         return currentCategory
     }
     
-    // get reminder list
+    // get reminder list from coredata
     func getReminders(category: Category) -> NSMutableArray {
         var currentReminder: NSMutableArray!
         let result = category.tasks?.allObjects as! [Reminder]
@@ -98,6 +98,7 @@ class DataManager: NSObject, CLLocationManagerDelegate {
             let c: Category = category as! Category
             print (c.isRemind)
             print(checkReminderCompletion(c))
+            // check whether the user allow the application push notification and reminder completion status
             if (c.isRemind == true && checkReminderCompletion(c) == true) {
                 let region = (name:c.title, coordinate:CLLocationCoordinate2D(latitude: Double(c.latitude!), longitude: Double(c.longitude!)))
                 // Setup geofence monitoring

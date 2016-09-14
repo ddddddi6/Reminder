@@ -91,7 +91,7 @@ class CategoryMasterViewController: UIViewController, MasterDelegate, CLLocation
         } 
     }
     
-    // refresh child tableviwe
+    // refresh child tableview
     func refreshTableView() {
         let categoryTable = self.childViewControllers[1] as! UITableViewController as! CategoryTableViewController
         categoryTable.currentCategory = DataManager.dataManager.getCategories()

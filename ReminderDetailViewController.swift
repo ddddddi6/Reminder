@@ -16,6 +16,7 @@ class ReminderDetailViewController: UIViewController {
     @IBOutlet var noteField: UITextView!
     @IBOutlet var completionSwitch: UISwitch!
     @IBOutlet var reminderSwitch: UISwitch!
+    @IBOutlet var completionLabel: UILabel!
     
     var reminder: Reminder!
     var delegate: ReminderListDelegate!
@@ -23,15 +24,21 @@ class ReminderDetailViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        noteField.layer.borderColor = UIColor(red: 0.9, green: 0.9, blue: 0.9, alpha: 1.0).CGColor
+        noteField.layer.borderWidth = 1.0
+        noteField.layer.cornerRadius = 5
 
+        completionSwitch.enabled = true
         // check the mode of this controller, new or edit
         if reminder == nil {
             self.title = "New Reminder"
-            datePicker.enabled = false
+            completionLabel.hidden = true
+            completionSwitch.hidden = true
             datePicker.hidden = true
-            completionSwitch.enabled = false
         } else {
-            completionSwitch.enabled = true
+            completionLabel.hidden = false
+            completionSwitch.hidden = false
             self.title = "Edit Reminder"
             showReminderDetail()
         }
@@ -90,7 +97,7 @@ class ReminderDetailViewController: UIViewController {
         // check input validation
         if(title!.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet()) == "")
         {
-            let messageString: String = "Please input valid title"
+            let messageString: String = "Please input a valid reminder title"
             // Setup an alert to warn user
             // UIAlertController manages an alert instance
             let alertController = UIAlertController(title: "Alert", message: messageString, preferredStyle:
@@ -111,7 +118,9 @@ class ReminderDetailViewController: UIViewController {
             reminder.note = note
             category.addReminder(reminder)
             DataManager.dataManager.saveData()
-            pushNotification(reminder.deadline!)
+            if reminder.deadline != nil {
+                pushNotification(reminder.deadline!)
+            }
             delegate?.refreshTable()
             self.navigationController?.popToRootViewControllerAnimated(true)
         }

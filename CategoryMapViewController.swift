@@ -12,16 +12,9 @@ import CoreData
 
 class CategoryMapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDelegate {
 
-    @IBOutlet var toolBar: UIToolbar! {
-        didSet {
-            
-            toolBar.setItems([MKUserTrackingBarButtonItem(mapView: mapView)], animated: false)
-        }
-    }
     @IBOutlet var mapView: MKMapView!
     
     let locationManager = CLLocationManager()
-    //var currentLocationManager: CLLocationManager!
     var latitude: String!
     var longitude: String!
     var currentCategory: NSMutableArray
@@ -177,8 +170,6 @@ class CategoryMapViewController: UIViewController, MKMapViewDelegate, CLLocation
             theDestination.catogory = DataManager.dataManager.managedObjectContext!.objectWithID(id) as! Category
         }
     }
-    
-    
 
     /*
     // MARK: - Navigation

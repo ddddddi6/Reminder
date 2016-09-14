@@ -12,7 +12,7 @@ class ColorManager: NSObject {
 
     static let colorManager = ColorManager()
     
-    // change the category color
+    // change the category color, return UIColor value
     func changeColor(color:String) -> UIColor{
         switch color {
         case "purple":
