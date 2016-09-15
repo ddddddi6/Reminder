@@ -133,7 +133,7 @@ class DataManager: NSObject, CLLocationManagerDelegate {
         print("Entered region \(region.identifier)")
         
         // Notify the user when they have entered a region
-        let message = "There are tasks need to be done at \(region.identifier)."
+        let message = "There are tasks need to be done under \(region.identifier)."
         let title = "Reminder"
         
         if UIApplication.sharedApplication().applicationState == .Active {
@@ -156,7 +156,7 @@ class DataManager: NSObject, CLLocationManagerDelegate {
         
         // Notify the user when they have exited from a region
         let title = "Reminder"
-        let message = "Did you finish all tasks at \(region.identifier)?"
+        let message = "Did you finish all tasks under \(region.identifier)?"
         
         if UIApplication.sharedApplication().applicationState == .Active {
            // App is active, show an alert

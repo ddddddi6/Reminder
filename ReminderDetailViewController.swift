@@ -95,7 +95,7 @@ class ReminderDetailViewController: UIViewController {
         let isComplete = self.completionSwitch.on
         
         // check input validation
-        if(title!.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet()) == "")
+        if(reminderTitle!.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet()) == "")
         {
             let messageString: String = "Please input a valid reminder title"
             // Setup an alert to warn user
